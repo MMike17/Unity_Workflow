@@ -166,7 +166,7 @@ class ProcessSelector : EditorWindow
 	{
 		ProcessSelector window = GetWindow<ProcessSelector>();
 		window.titleContent = new GUIContent("Process Database");
-		window.minSize = new Vector2(250, 230);
+		window.minSize = new Vector2(350, 230);
 		window.Show();
 	}
 
@@ -178,18 +178,28 @@ class ProcessSelector : EditorWindow
 		EditorGUILayout.LabelField("Settings", titleStyle);
 		EditorGUILayout.Space();
 
-		newMarker = TextFieldApply("Code marker :", newMarker, ProcessCore.settings.codeMarker, value =>
+		EditorGUILayout.BeginHorizontal();
 		{
-			ProcessCore.settings.codeMarker = value;
-			ProcessCore.SaveSettings();
-			ProcessCore.RefreshCache();
-		});
+			newMarker = TextFieldApply("Code marker :", newMarker, ProcessCore.settings.codeMarker, value =>
+			{
+				ProcessCore.settings.codeMarker = value;
+				ProcessCore.SaveSettings();
+				ProcessCore.RefreshCache();
+			},
+			value => "// " + value + " : ");
+		}
+		EditorGUILayout.EndHorizontal();
 
-		newPath = TextFieldApply("Process save path : ", newPath, ProcessCore.settings.processSavePath, value =>
+		EditorGUILayout.BeginHorizontal();
 		{
-			ProcessCore.settings.processSavePath = value;
-			ProcessCore.SaveSettings();
-		});
+			newPath = TextFieldApply("Process save path : ", newPath, ProcessCore.settings.processSavePath, value =>
+			{
+				ProcessCore.settings.processSavePath = value;
+				ProcessCore.SaveSettings();
+			},
+			value => Path.Combine("Assets", value));
+		}
+		EditorGUILayout.EndHorizontal();
 
 		EditorGUILayout.Space();
 
@@ -229,16 +239,17 @@ class ProcessSelector : EditorWindow
 					if (!string.IsNullOrEmpty(processes[i].shortDescription))
 						EditorGUILayout.LabelField(processes[i].shortDescription, centerStyle);
 
-					EditorGUILayout.Space();
+					DrawLine();
 				}
 
 				toRemove.Reverse();
 				toRemove.ForEach(item => processes.RemoveAt(item));
 			}
 			EditorGUILayout.EndScrollView();
-
 			EditorGUILayout.Space();
 		}
+		else
+			EditorGUILayout.Space();
 
 		if (GUILayout.Button("Create process"))
 		{
@@ -310,16 +321,33 @@ class ProcessSelector : EditorWindow
 		ProcessCore.RefreshCache();
 	}
 
-	private string TextFieldApply(string label, string value, string check, Action<string> OnApply)
+	private void DrawLine()
+	{
+		GUI.color = Color.grey;
+		EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+		GUI.color = Color.white;
+	}
+
+	private string TextFieldApply(
+		string label,
+		string value,
+		string check,
+		Action<string> OnApply,
+		Func<string, string> OnPreview
+	)
 	{
 		string newValue;
 
 		EditorGUILayout.BeginHorizontal();
 		{
-			newValue = EditorGUILayout.TextField(label, value);
+			newValue = EditorGUILayout.TextField(label, value, GUILayout.MinWidth(250));
 
 			if (newValue != check && GUILayout.Button("Apply", GUILayout.Width(100)))
 				OnApply?.Invoke(newValue);
+
+			GUI.color = Color.grey;
+			EditorGUILayout.LabelField(OnPreview?.Invoke(newValue));
+			GUI.color = Color.white;
 		}
 		EditorGUILayout.EndHorizontal();
 
