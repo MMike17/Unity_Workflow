@@ -192,6 +192,11 @@ class ProcessSelector : EditorWindow
 		});
 
 		EditorGUILayout.Space();
+
+		if (GUILayout.Button("Refresh Processes"))
+			RefreshCache();
+
+		EditorGUILayout.Space();
 		EditorGUILayout.Space();
 
 		EditorGUILayout.LabelField("Processes", titleStyle);
@@ -283,23 +288,26 @@ class ProcessSelector : EditorWindow
 			newPath = ProcessCore.settings.processSavePath;
 
 		if (processes == null)
+			RefreshCache();
+	}
+
+	private void RefreshCache()
+	{
+		processes = new List<ProcessObj>();
+		string[] guids = AssetDatabase.FindAssets("t:ScriptableObject");
+
+		if (guids.Length > 0)
 		{
-			processes = new List<ProcessObj>();
-			string[] guids = AssetDatabase.FindAssets("t:ScriptableObject");
-
-			if (guids.Length > 0)
+			foreach (string guid in guids)
 			{
-				foreach (string guid in guids)
-				{
-					Object obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
+				Object obj = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(guid));
 
-					if (obj is ProcessObj)
-						processes.Add(obj as ProcessObj);
-				}
+				if (obj is ProcessObj)
+					processes.Add(obj as ProcessObj);
 			}
-
-			ProcessCore.RefreshCache();
 		}
+
+		ProcessCore.RefreshCache();
 	}
 
 	private string TextFieldApply(string label, string value, string check, Action<string> OnApply)
