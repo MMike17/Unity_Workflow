@@ -8,6 +8,7 @@ using static ProcessObj;
 class ProcessEditor : Editor
 {
 	private ProcessObj process;
+	private Vector2 scroll;
 	private bool editMode;
 
 	private GUIStyle titleStyle;
@@ -58,47 +59,51 @@ class ProcessEditor : Editor
 
 		Task toDelete = null;
 
-		foreach (Task task in process.tasks)
+		scroll = EditorGUILayout.BeginScrollView(scroll);
 		{
-			EditorGUILayout.BeginHorizontal();
+			foreach (Task task in process.tasks)
 			{
-				if (editMode)
+				EditorGUILayout.BeginHorizontal();
 				{
-					if (GUILayout.Button("Remove"))
+					if (editMode)
 					{
-						toDelete = task;
-						break;
+						if (GUILayout.Button("Remove"))
+						{
+							toDelete = task;
+							break;
+						}
+
+						task.title = EditorGUILayout.TextArea(task.title, longInputStyle, GUILayout.MinWidth(100));
+
+						string[] names = ProcessCore.GetScriptNames();
+						task.targetScriptIndex = EditorGUILayout.Popup(task.targetScriptIndex, names);
+						task.targetScript = task.targetScriptIndex != -1 ? names[task.targetScriptIndex] : "";
+
+						string[] lines = ProcessCore.GetAllLines(task.targetScript);
+						task.targetIndex = EditorGUILayout.Popup(task.targetIndex, lines);
 					}
-
-					task.title = EditorGUILayout.TextArea(task.title, longInputStyle, GUILayout.MinWidth(100));
-
-					string[] names = ProcessCore.GetScriptNames();
-					task.targetScriptIndex = EditorGUILayout.Popup(task.targetScriptIndex, names);
-					task.targetScript = task.targetScriptIndex != -1 ? names[task.targetScriptIndex] : "";
-
-					string[] lines = ProcessCore.GetAllLines(task.targetScript);
-					task.targetIndex = EditorGUILayout.Popup(task.targetIndex, lines);
-				}
-				else
-				{
-					task.state = EditorGUILayout.Toggle(task.state, GUILayout.Width(15));
-
-					if (task.state)
-						GUI.color = Color.grey;
-
-					if (GUILayout.Button(task.state ? StrikethroughText(task.title) : task.title, GUI.skin.label))
+					else
 					{
-						AssetDatabase.OpenAsset(
-							ProcessCore.GetScriptWithName(task.targetScript),
-							ProcessCore.GetLineIndex(task.targetScript, task.targetIndex)
-						);
-					}
+						task.state = EditorGUILayout.Toggle(task.state, GUILayout.Width(15));
 
-					GUI.color = Color.white;
+						if (task.state)
+							GUI.color = Color.grey;
+
+						if (GUILayout.Button(task.state ? StrikethroughText(task.title) : task.title, GUI.skin.label))
+						{
+							AssetDatabase.OpenAsset(
+								ProcessCore.GetScriptWithName(task.targetScript),
+								ProcessCore.GetLineIndex(task.targetScript, task.targetIndex)
+							);
+						}
+
+						GUI.color = Color.white;
+					}
 				}
+				EditorGUILayout.EndHorizontal();
 			}
-			EditorGUILayout.EndHorizontal();
 		}
+		EditorGUILayout.EndScrollView();
 
 		if (toDelete != null)
 			process.tasks.Remove(toDelete);

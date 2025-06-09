@@ -81,6 +81,9 @@ static class ProcessCore
 
 	public static string[] GetScriptNames()
 	{
+		if (detectedScripts == null)
+			RefreshCache();
+
 		List<string> names = new List<string>();
 		detectedScripts.ForEach(item => names.Add(item.name));
 		return names.ToArray();
@@ -88,6 +91,9 @@ static class ProcessCore
 
 	public static string[] GetAllLines(string fileName)
 	{
+		if (detectedLines == null)
+			RefreshCache();
+
 		if (detectedLines.ContainsKey(fileName))
 		{
 			string[] lines = new string[detectedLines[fileName].Values.Count];
@@ -103,6 +109,9 @@ static class ProcessCore
 	public static int GetLineIndex(string scriptName, int index)
 	{
 		int count = 0;
+
+		if (detectedLines == null)
+			RefreshCache();
 
 		if (detectedLines.ContainsKey(scriptName))
 		{
@@ -120,6 +129,9 @@ static class ProcessCore
 
 	public static int GetScriptIndex(string scriptName)
 	{
+		if (detectedScripts == null)
+			RefreshCache();
+
 		Object selected = detectedScripts.Find(item => item.name == scriptName);
 		return selected != null ? detectedScripts.IndexOf(selected) : -1;
 	}
